@@ -3,61 +3,68 @@ package MooseX::Types::NetAddr::IP;
 use strict;
 use warnings;
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 use NetAddr::IP ();
 use MooseX::Types::Moose qw/Str ArrayRef/;
 use namespace::clean;
-
 use MooseX::Types -declare => [qw( NetAddrIP NetAddrIPv4 NetAddrIPv6 )];
 
 class_type 'NetAddr::IP';
 
-subtype NetAddrIP,   as 'NetAddr::IP';
-subtype NetAddrIPv4, as 'NetAddr::IP';
-subtype NetAddrIPv6, as 'NetAddr::IP';
+subtype NetAddrIP,   as 'NetAddr::IP';  # can be either IPv4 or IPv6
+subtype NetAddrIPv4, as 'NetAddr::IP';  # can be only IPv4
+subtype NetAddrIPv6, as 'NetAddr::IP';  # can be only IPv6
 
 coerce NetAddrIP, 
     from Str, 
     via { 
-        'NetAddr::IP'->new( $_ ) 
-            or die "Cannot coerce '$_' into a NetAddr::IP object.\n";
+        return NetAddr::IP->new( $_ ) 
+            or die "'$_' is not an IP address.\n";
     };
 
 coerce NetAddrIP, 
     from ArrayRef[Str], 
     via { 
-        'NetAddr::IP'->new( @$_ ) 
-            or die "Cannot coerce '@$_' into a NetAddr::IP object.\n";
+        return NetAddr::IP->new( @$_ ) 
+            or die "'@$_' is not an IP address.\n";
     };
 
-my $ipv4prefix = '(?:[1-2]?[0-9]|3[0-2])';
-my $ipv4unit   = '(?:25[0-5]|2[0-4][0-9]|[0-1]?[0-9]{1,2})';
-my $ipv4       = "(?:$ipv4unit\.){3}$ipv4unit";
+sub createIPv4Addr (@) {
+    my $ipaddr = NetAddr::IP->new( @_ )
+        or die "'@_' is not an IPv4 address.\n";
+
+    die "'@_' is not an IPv4 address."
+        unless $ipaddr->version == 4;
+
+    return $ipaddr;
+}
+
+sub createIPv6Addr (@) {
+    my $ipaddr = NetAddr::IP->new( @_ )
+        or die "'@_' is not an IPv6 address.\n";
+
+    die "'@_' is not an IPv6 address."
+        unless $ipaddr->version == 6;
+
+    return $ipaddr;
+}
 
 coerce NetAddrIPv4,
     from Str,
-    via {
-        die "'$_' is not a valid IPv4 address." 
-            unless m/^$ipv4(?:\/$ipv4prefix)?$/;
+    via { createIPv4Addr $_ };
 
-        'NetAddr::IP'->new( $_ )
-            or die "Cannot coerce '$_' into a NetAddr::IP object.\n";
-    };
-
-my $ipv6prefix = '(?:[1-9]?[0-9]|1[0-2][0-9]|12[0-8])';
-my $ipv6unit   = '[0-9a-fA-F]{0,4}';
-my $ipv6       = "(?:(?:$ipv6unit:){2,7}$ipv6unit)|::[fF]{4}:$ipv4";
+coerce NetAddrIPv4,
+    from ArrayRef[Str],
+    via { createIPv4Addr @$_ };
 
 coerce NetAddrIPv6,
     from Str,
-    via { 
-        die "'$_' is not a valid IPv6 address."
-            unless m/^$ipv6(?:\/$ipv6prefix)?$/;
+    via { createIPv6Addr $_ };
 
-        'NetAddr::IP'->new( $_ )
-            or die "Cannot coerce '$_' into a NetAddr::IP object.\n";
-    };
+coerce NetAddrIPv6,
+    from ArrayRef[Str],
+    via { createIPv6Addr @$_ };
 
 1;
 __END__
@@ -82,11 +89,11 @@ NetAddrIP
 
 NetAddrIPv4
 
-    Coerces from Str via "new" in NetAddr::IP.
+    Coerces from Str and ArrayhRef[Str,Str] via "new" in NetAddr::IP.
 
 NetAddrIPv6
 
-    Coerces from Str via "new" in NetAddr::IP.
+    Coerces from Str and ArrayRef[Str,Str] via "new" in NetAddr::IP.
 
 =head1 SEE ALSO
 

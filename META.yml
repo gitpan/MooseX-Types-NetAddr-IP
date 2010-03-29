@@ -1,8 +1,9 @@
 --- #YAML:1.0
 name:               MooseX-Types-NetAddr-IP
-version:            0.01
+version:            0.02
 abstract:           NetAddr::IP related types and coercions for Moose
-author:  []
+author:
+    - Todd Caine <todd.caine@gmail.com>
 license:            perl
 distribution_type:  module
 configure_requires:
@@ -14,6 +15,7 @@ requires:
     MooseX::Types:     0.19
     namespace::clean:  0.08
     NetAddr::IP:       0
+    Test::Exception:   0
 no_index:
     directory:
         - t
