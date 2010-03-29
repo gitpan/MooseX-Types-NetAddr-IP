@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name:               MooseX-Types-NetAddr-IP
-version:            0.02
+version:            0.03
 abstract:           NetAddr::IP related types and coercions for Moose
 author:
     - Todd Caine <todd.caine@gmail.com>
