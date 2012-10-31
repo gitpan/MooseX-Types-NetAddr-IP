@@ -18,9 +18,10 @@ no_index:
     - t
     - inc
 requires:
+  Class::Load: 0.2
   Moose: 0.41
   MooseX::Types: 0.19
   NetAddr::IP: 0
   Test::Exception: 0
   namespace::clean: 0.08
-version: 0.05
+version: 0.06
